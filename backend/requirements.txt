@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+mysql-connector-python
+SQLAlchemy
+passlib[bcrypt]
+python-jose[cryptography]
+speechrecognition
+pydub
+gTTS
+googletrans==4.0.0-rc1
+python-multipart
+ reportlab
