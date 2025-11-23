@@ -9,4 +9,5 @@ pydub
 gTTS
 googletrans==4.0.0-rc1
 python-multipart
- reportlab
+reportlab
+bcrypt==4.1.2

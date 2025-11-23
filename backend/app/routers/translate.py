@@ -1,14 +1,12 @@
 from fastapi import APIRouter
-from googletrans import Translator
+from deep_translator import GoogleTranslator
 
 router = APIRouter(prefix="/translate", tags=["Translate"])
-translator = Translator()
 
 @router.post("/")
 def translate_text(text: str):
-    res = translator.translate(text, dest="en")
+    translated = GoogleTranslator(source="auto", target="en").translate(text)
     return {
         "original": text,
-        "detected_language": res.src,
-        "translated_english": res.text
+        "translated": translated
     }
