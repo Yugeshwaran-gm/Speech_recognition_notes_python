@@ -23,18 +23,23 @@ export default function Notes() {
         }
     };
 
-    const addNote = async () => {
-        if (!title.trim() || !content.trim()) return;
+   const addNote = async () => {
+    try {
+        const res = await api.post("/notes/", {
+            original_text: title,
+            translated_text: content,
+            category: "General",
+            is_pinned: false,
+        });
 
-        try {
-            const res = await api.post("/notes/", { title, content });
-            setNotes([...notes, res.data]);
-            setTitle("");
-            setContent("");
-        } catch (err) {
-            console.error("Error adding note:", err);
-        }
-    };
+        setNotes([...notes, res.data]);
+        setTitle("");
+        setContent("");
+    } catch (err) {
+        console.error("Error adding note:", err);
+    }
+};
+
 
     const saveEdit = async () => {
         if (!title.trim() || !content.trim()) return;
