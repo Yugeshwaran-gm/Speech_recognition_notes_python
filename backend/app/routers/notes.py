@@ -69,3 +69,51 @@ def search_notes(q: str, db: Session = Depends(get_db)):
     )
 
     return {"query": q, "results": results}
+# ------------------------------------------
+# Update Note
+# ------------------------------------------
+@router.put("/{note_id}", response_model=schemas.NoteOut)
+def update_note(
+    note_id: int,
+    data: schemas.NoteUpdate,
+    db: Session = Depends(get_db)
+):
+    note = db.query(models.Note).filter(
+        models.Note.id == note_id,
+        models.Note.user_id == FAKE_USER_ID
+    ).first()
+
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    note.original_text = data.original_text
+    note.translated_text = data.translated_text
+    note.category = data.category
+    note.is_pinned = data.is_pinned
+
+    db.commit()
+    db.refresh(note)
+    return note
+
+
+
+# ------------------------------------------
+# Delete Note
+# ------------------------------------------
+@router.delete("/{note_id}")
+def delete_note(
+    note_id: int,
+    db: Session = Depends(get_db)
+):
+    note = db.query(models.Note).filter(
+        models.Note.id == note_id,
+        models.Note.user_id == FAKE_USER_ID
+    ).first()
+
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    db.delete(note)
+    db.commit()
+
+    return {"message": "Note deleted successfully"}
