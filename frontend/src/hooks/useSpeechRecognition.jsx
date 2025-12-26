@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 
-export const useSpeechRecognition = (onFinalResult) => {
+export const useSpeechRecognition = (onFinalResult, setLivePreview) => {
     const callbackRef = useRef(onFinalResult);
+    const livePreviewRef = useRef(setLivePreview);
     const recognitionRef = useRef(null);
     const [recognition, setRecognition] = useState(null);
 
-    // Keep the callback fresh without recreating recognition
+    // Keep the callbacks fresh without recreating recognition
     useEffect(() => {
         callbackRef.current = onFinalResult;
-    }, [onFinalResult]);
+        livePreviewRef.current = setLivePreview;
+    }, [onFinalResult, setLivePreview]);
 
     useEffect(() => {
         const SpeechRecognition =
@@ -22,17 +24,22 @@ export const useSpeechRecognition = (onFinalResult) => {
         recognition.lang = "en-US";
 
         recognition.onresult = (event) => {
-            let finalTranscript = "";
+            let interim = "";
+            let final = "";
 
             for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+
                 if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + " ";
+                    final += transcript + " ";
+                } else {
+                    interim += transcript;
                 }
             }
 
-            const trimmed = finalTranscript.trim();
-            if (trimmed && callbackRef.current) {
-                callbackRef.current(trimmed);
+            if (livePreviewRef.current) livePreviewRef.current(interim);
+            if (final.trim() && callbackRef.current) {
+                callbackRef.current(final.trim());
             }
         };
 

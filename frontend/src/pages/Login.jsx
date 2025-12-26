@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import api from "../api/axios";
 import { AuthContext } from "../context/authContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Login = () => {
     const { login } = useContext(AuthContext);
@@ -10,10 +10,12 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError("");
+        setLoading(true);
 
         try {
             const response = await api.post("/auth/login", {
@@ -31,40 +33,104 @@ const Login = () => {
                 err.response?.data?.detail ||
                 "Invalid credentials. Please try again."
             );
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div>
-            <h2>Login</h2>
+        <div className="min-h-screen flex overflow-hidden bg-gradient-to-r from-slate-50 via-blue-50 to-orange-50">
+            
 
-            {error && (
-                <p>{error}</p>
-            )}
+            {/* Left Section - White Card */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 pt-24">
+                <div className="w-full max-w-md">
+                    <div className="bg-white rounded-3xl p-8 lg:p-10 shadow-lg border border-slate-100 backdrop-blur transform transition-all duration-500 hover:shadow-xl">
+                        {/* Welcome Text */}
+                        <h1 className="text-5xl lg:text-6xl font-bold text-blue-600 italic mb-6">
+                            Welcome
+                        </h1>
 
-            <form onSubmit={handleLogin}>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
+                        {/* Error Message */}
+                        {error && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm animate-pulse">
+                                {error}
+                            </div>
+                        )}
 
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
+                        {/* Form */}
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            {/* Email Input */}
+                            <div className="flex items-center bg-slate-50 border-2 border-slate-200 rounded-full px-4 py-3 focus-within:border-blue-400 focus-within:bg-slate-50 transition-all duration-200">
+                                <input
+                                    type="email"
+                                    placeholder="username@gmail.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 outline-none text-sm"
+                                />
+                            </div>
 
-                <button type="submit">Login</button>
-            </form>
+                            {/* Password Section */}
+                            <div>
+                                {/* <label className="text-slate-600 text-sm font-medium block mb-2">Password</label> */}
+                                <input
+                                    type="password"
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-full px-4 py-3 focus:border-cyan-500 focus:bg-white outline-none text-slate-900 placeholder-slate-400 transition-all duration-200 text-sm"
+                                />
+                            </div>
 
-            <p>
-                Don't have an account? <a href="/register">Signup</a>
-            </p>
+                            {/* Forgot Password */}
+                            <div className="flex justify-end">
+                                <a
+                                    href="#"
+                                    className="text-blue-600 text-xs font-semibold hover:text-blue-700 transition-colors duration-200"
+                                >
+                                    Forgot password?
+                                </a>
+                            </div>
+
+                            {/* Login Button */}
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-blue-600 text-white font-bold py-3 rounded-full hover:bg-blue-700 hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                            >
+                                {loading ? "Logging in..." : "Log In"}
+                            </button>
+                        </form>
+
+                        
+                        {/* Sign Up Link */}
+                        <p className="text-center mt-6 text-slate-600 text-sm">
+                            Not a member?{" "}
+                            <Link
+                                to="/register"
+                                className="text-blue-600 font-bold hover:text-blue-700 hover:underline transition-colors duration-200"
+                            >
+                                Sign up
+                            </Link>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Section - Background Image */}
+            <div
+                className="hidden lg:flex w-1/2 items-center justify-center p-12 relative overflow-hidden"
+                style={{
+                    backgroundImage: `url('/bgimage.jpg')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                }}
+            >
+                <div className="absolute inset-0 bg-gradient-to-t from-orange-600/20 to-transparent opacity-40"></div>
+            </div>
         </div>
     );
 };

@@ -46,11 +46,11 @@ def register(user: RegisterUser, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
+    token = create_token({"user_id": new_user.id})
     return {
-        "id": new_user.id,
-        "name": new_user.name,
-        "email": new_user.email
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": new_user.id
     }
 
 
