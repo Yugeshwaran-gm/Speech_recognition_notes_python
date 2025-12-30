@@ -17,9 +17,10 @@ export default function Notes() {
     const [listening, setListening] = useState(false);
     const [livePreview, setLivePreview] = useState("");
     const [lastCommandTime, setLastCommandTime] = useState(0);
-    const COMMAND_COOLDOWN = 1200; 
     const [speaking, setSpeaking] = useState(false);
     const [speechUtterance, setSpeechUtterance] = useState(null);
+    const [query, setQuery] = useState("");
+    const COMMAND_COOLDOWN = 1200; 
 
 
 
@@ -91,6 +92,36 @@ const stopListening = () => {
     setListening(false);
     console.log("Final content:", content);
 };
+const handleSearchChange = (e) => {
+  const value = e.target.value;
+  setQuery(value);
+  
+  // Auto-reload all notes when search field is cleared
+  if (!value.trim()) {
+    loadNotes();
+  }
+};
+
+const searchNotes = async () => {
+  try {
+    if (!query.trim()) {
+      // If query is empty, reload all notes
+      loadNotes();
+      return;
+    }
+    const res = await api.get(`/notes/search?q=${query}`);
+    console.log("Search response:", res.data);
+    
+    // Handle both response structures: {results: [...]} or [...]
+    const results = Array.isArray(res.data) ? res.data : (res.data.results || []);
+    console.log("Setting notes to:", results);
+    setNotes(results);
+  } catch (err) {
+    console.error("Error searching notes:", err);
+    alert("Search failed. Please try again.");
+  }
+};
+
 
     // Load Notes
    
@@ -477,12 +508,26 @@ useEffect(() => {
                         Logout
                     </button>
                 </div>
+                <input
+  type="text"
+  placeholder="Search notes..."
+  value={query}
+  onChange={handleSearchChange}
+  className="border p-2 rounded w-full mb-3"
+/>
+<button
+  onClick={searchNotes}
+  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium shadow-md mb-6"
+>
+  Search
+</button>
 
                 {/* Add / Edit Form */}
                 <div className="bg-white shadow-lg border border-slate-100 p-6 rounded-2xl mb-6">
                     <h3 className="text-xl font-semibold mb-4 text-slate-800">
                         {editingId ? "Edit Note" : "Add Note"}
                     </h3>
+                    
 
                     <input
                         type="text"
@@ -586,18 +631,7 @@ useEffect(() => {
                                     className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
                                 >
                                     Save Changes
-                                </button>
-
-                                {/* <button
-                                    onClick={() => {
-                                        setEditingId(null);
-                                        setTitle("");
-                                        setContent("");
-                                    }}
-                                    className="bg-slate-400 text-white px-4 py-2 rounded-lg hover:bg-slate-500 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-                                >
-                                    Cancel
-                                </button> */}
+                                </button> 
                             </>
                         ) : (
                             <button
@@ -652,41 +686,47 @@ useEffect(() => {
 
                 {/* Notes List */}
                 <div className="grid md:grid-cols-2 gap-4">
-                    {notes.map((n) => (
-                        <div
-                            key={n.id}
-                            className="bg-white shadow-lg border border-slate-100 p-4 rounded-2xl hover:shadow-xl transition-all duration-300"
-                        >
-                            <h4 className="text-xl font-semibold text-slate-800">
-                                {n.original_text}
-                            </h4>
+  {notes.length === 0 ? (
+    <p className="col-span-full text-center text-slate-400 italic">
+      No notes found
+    </p>
+  ) : (
+    notes.map((n) => (
+      <div
+        key={n.id}
+        className="bg-white shadow-lg border border-slate-100 p-4 rounded-2xl hover:shadow-xl transition-all duration-300"
+      >
+        <h4 className="text-xl font-semibold text-slate-800">
+          {n.original_text}
+        </h4>
 
-                            {n.translated_text && (
-                                <div
-                                    className="text-slate-600 mt-2 prose max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: n.translated_text }}
-                                />
+        {n.translated_text && (
+          <div
+            className="text-slate-600 mt-2 prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: n.translated_text }}
+          />
+        )}
 
-                            )}
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={() => startEdit(n)}
+            className="bg-amber-500 text-white px-3 py-1 rounded-lg hover:bg-amber-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+          >
+            Edit
+          </button>
 
-                            <div className="flex gap-3 mt-4">
-                                <button
-                                    onClick={() => startEdit(n)}
-                                    className="bg-amber-500 text-white px-3 py-1 rounded-lg hover:bg-amber-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-                                >
-                                    Edit
-                                </button>
+          <button
+            onClick={() => deleteNote(n.id)}
+            className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ))
+  )}
+</div>
 
-                                <button
-                                    onClick={() => deleteNote(n.id)}
-                                    className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
             </div>
         </div>
     );

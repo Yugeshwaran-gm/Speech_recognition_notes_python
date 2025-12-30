@@ -6,8 +6,8 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = "rootsql"
     DB_NAME: str = "speech_notes_app"
 
-    JWT_SECRET: str = "eywcjoguyhoiyoieuryc"
-    JWT_ALGO: str = "HS256"
+    SECRET_KEY: str = "eywcjoguyhoiyoieuryc"
+    ALGORITHM: str = "HS256"
 
     class Config:
         env_file = ".env"

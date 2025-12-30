@@ -9,6 +9,7 @@ const Register = () => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
@@ -72,40 +73,42 @@ const Register = () => {
                         {/* Form */}
                         <form onSubmit={handleSignup} className="space-y-4">
                             {/* Name Input */}
-                            <div className="flex items-center bg-slate-50 border-2 border-slate-200 rounded-full px-4 py-3 focus-within:border-blue-400 focus-within:bg-slate-50 transition-all duration-200">
-                                <input
-                                    type="text"
-                                    placeholder="Full Name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                    className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 outline-none text-sm"
-                                />
-                            </div>
+                            <input
+                                type="text"
+                                placeholder="Full Name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-full px-4 py-3 focus:border-cyan-500 focus:bg-white outline-none text-slate-900 placeholder-slate-400 transition-all duration-200 text-sm"
+                            />
 
                             {/* Email Input */}
-                            <div className="flex items-center bg-slate-50 border-2 border-slate-200 rounded-full px-4 py-3 focus-within:border-blue-400 focus-within:bg-slate-50 transition-all duration-200">
-                                <input
-                                    type="email"
-                                    placeholder="maria@gmail.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    className="flex-1 bg-transparent text-slate-900 placeholder-slate-400 outline-none text-sm"
-                                />
-                            </div>
+                            <input
+                                type="email"
+                                placeholder="maria@gmail.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-full px-4 py-3 focus:border-cyan-500 focus:bg-white outline-none text-slate-900 placeholder-slate-400 transition-all duration-200 text-sm"
+                            />
 
                             {/* Password Section */}
-                            <div>
-                                {/* <label className="text-slate-600 text-sm font-medium block mb-2">Password</label> */}
+                            <div className="relative">
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="Enter your password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-full px-4 py-3 focus:border-cyan-500 focus:bg-white outline-none text-slate-900 placeholder-slate-400 transition-all duration-200 text-sm"
+                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-full px-4 py-3 pr-10 focus:border-cyan-500 focus:bg-white outline-none text-slate-900 placeholder-slate-400 transition-all duration-200 text-sm"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                                >
+                                    {showPassword ? "👁️" : "👁️‍🗨️"}
+                                </button>
                             </div>
 
                             {/* Terms Checkbox */}
