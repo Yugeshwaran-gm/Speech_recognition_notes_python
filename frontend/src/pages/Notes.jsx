@@ -1,16 +1,20 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import api from "../api/axios";
 import { AuthContext } from "../context/authContext";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import Sidebar from "../components/Sidebar";
+import NotesHeader from "../components/NotesHeader";
+import RightPanel from "../components/RightPanel";
 
 
 export default function Notes() {
     const { logout } = useContext(AuthContext);
 
     const [notes, setNotes] = useState([]);
+    const [filter, setFilter] = useState("All");
     const [title, setTitle] = useState("");     // UI title
     const [content, setContent] = useState(""); // UI content
     const [editingId, setEditingId] = useState(null);
@@ -20,6 +24,7 @@ export default function Notes() {
     const [speaking, setSpeaking] = useState(false);
     const [speechUtterance, setSpeechUtterance] = useState(null);
     const [query, setQuery] = useState("");
+    const [selectedDate, setSelectedDate] = useState(null); // yyyy-mm-dd
     const COMMAND_COOLDOWN = 1200; 
 
 
@@ -133,6 +138,29 @@ const searchNotes = async () => {
             console.error("Error fetching notes:", err);
         }
     };
+
+    const formatDateKey = (value) => {
+      if (!value) return null;
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return null;
+      return d.toLocaleDateString("en-CA");
+    };
+
+    const noteDateCounts = useMemo(() => {
+      const map = {};
+      notes.forEach((n) => {
+        const key = formatDateKey(n.created_at);
+        if (key) {
+          map[key] = (map[key] || 0) + 1;
+        }
+      });
+      return map;
+    }, [notes]);
+
+    const filteredNotes = useMemo(() => {
+      if (!selectedDate) return notes;
+      return notes.filter((n) => formatDateKey(n.created_at) === selectedDate);
+    }, [notes, selectedDate]);
   
     // Add Note
    
@@ -496,173 +524,152 @@ useEffect(() => {
 
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-orange-50">
-            <div className="max-w-3xl mx-auto p-5">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-3xl font-bold text-blue-600">Your Notes</h2>
-                    <button
-                        onClick={logout}
-                        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors duration-200 font-medium shadow-md"
-                    >
-                        Logout
-                    </button>
-                </div>
-                <input
-  type="text"
-  placeholder="Search notes..."
-  value={query}
-  onChange={handleSearchChange}
-  className="border p-2 rounded w-full mb-3"
-/>
-<button
-  onClick={searchNotes}
-  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium shadow-md mb-6"
->
-  Search
-</button>
+        <div className="min-h-screen bg-[#0B1220] text-white flex">
 
-                {/* Add / Edit Form */}
-                <div className="bg-white shadow-lg border border-slate-100 p-6 rounded-2xl mb-6">
-                    <h3 className="text-xl font-semibold mb-4 text-slate-800">
+            {/* LEFT SIDEBAR */}
+            <Sidebar />
+
+            {/* CENTER CONTENT */}
+            <main className="flex-1 px-8 py-6 space-y-6 overflow-y-auto">
+
+                {/* Header + Search */}
+                <NotesHeader
+                    query={query}
+                    onQueryChange={handleSearchChange}
+                    onSearch={searchNotes}
+                />
+            
+                {selectedDate && (
+                  <div className="flex items-center gap-2 text-sm text-slate-300">
+                    <span>
+                      Showing notes for {new Date(selectedDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                    </span>
+                    <button
+                      onClick={() => setSelectedDate(null)}
+                      className="text-blue-400 hover:text-blue-300 underline"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                {/* Editor / Create / Edit */}
+                <section className="bg-[#0F172A] border border-slate-800 rounded-2xl p-6">
+                    <h3 className="text-lg font-semibold mb-4">
                         {editingId ? "Edit Note" : "Add Note"}
                     </h3>
-                    
 
+                    {/* Title */}
                     <input
-                        type="text"
-                        placeholder="Title"
-                        className="w-full border-2 border-slate-200 p-3 rounded-lg mb-3 focus:outline-none focus:border-blue-400 focus:bg-slate-50 transition-all duration-200"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Title"
+                        className="w-full bg-transparent border border-slate-700 rounded-lg px-3 py-2 mb-3 text-white placeholder-slate-400"
                     />
 
-                    {/* <textarea
-                        placeholder="Content"
-                        className="w-full border-2 border-slate-200 p-3 rounded-lg mb-3 h-28 resize-none focus:outline-none focus:border-blue-400 focus:bg-slate-50 transition-all duration-200"
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                    /> */}
-                    
-   <div
-  className="flex gap-2 mb-2"
-  onClick={(e) => e.stopPropagation()}
->
-  <button
-   type="button"
-  onClick={() => editor?.chain().focus().toggleBold().run()}
-  className={`editor-btn ${
-    editor?.isActive("bold") ? "editor-btn-active" : ""
-  }`}
-  >
-    B
-  </button>
-<button
-  type="button"
-  onClick={() => editor?.chain().focus().toggleItalic().run()}
-  className={`editor-btn ${
-    editor?.isActive("italic") ? "editor-btn-active" : ""
-  }`}
->
-  I
-</button>
- <button
-  type="button"
-  onClick={() => editor?.chain().focus().toggleBulletList().run()}
-  className={`editor-btn ${
-    editor?.isActive("bulletList") ? "editor-btn-active" : ""
-  }`}
->
-  • List
-</button>
+                    {/* Toolbar */}
+                    <div className="flex gap-2 mb-2">
+                        <button
+                            type="button"
+                            onClick={() => editor?.chain().focus().toggleBold().run()}
+                            className={`editor-btn ${editor?.isActive("bold") ? "editor-btn-active" : ""}`}
+                        >
+                            B
+                        </button>
 
+                        <button
+                            type="button"
+                            onClick={() => editor?.chain().focus().toggleItalic().run()}
+                            className={`editor-btn ${editor?.isActive("italic") ? "editor-btn-active" : ""}`}
+                        >
+                            I
+                        </button>
 
-  <button
-  type="button"
-  onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-  className={`editor-btn ${
-    editor?.isActive("orderedList") ? "editor-btn-active" : ""
-  }`}
->
-  1. List
-</button>
+                        <button
+                            type="button"
+                            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                            className={`editor-btn ${editor?.isActive("bulletList") ? "editor-btn-active" : ""}`}
+                        >
+                            • List
+                        </button>
 
-</div>
-<div
-  className="w-full border-2 border-slate-200 rounded-lg mb-3 min-h-[160px]
-             px-3 py-2 cursor-text
-             focus-within:border-blue-400 transition-all"
-  onClick={() => editor?.commands.focus()}
->
+                        <button
+                            type="button"
+                            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                            className={`editor-btn ${editor?.isActive("orderedList") ? "editor-btn-active" : ""}`}
+                        >
+                            1. List
+                        </button>
+                    </div>
 
+                    {/* Editor */}
+                    <div
+                        className="border border-slate-700 rounded-lg min-h-[160px] px-3 py-2 cursor-text focus-within:border-blue-400 transition-all"
+                        onClick={() => editor?.commands.focus()}
+                    >
+                        <EditorContent
+                            editor={editor}
+                            className="
+                                outline-none
+                                border-none
+                                shadow-none
+                                prose prose-sm max-w-none text-white
+                                [&_.ProseMirror]:outline-none
+                                [&_.ProseMirror]:border-none
+                                [&_.ProseMirror]:shadow-none
+                                [&_.ProseMirror]:p-0
+                                [&_.ProseMirror_p]:my-2
+                                [&_.ProseMirror_ul]:list-disc
+                                [&_.ProseMirror_ul]:ml-6
+                                [&_.ProseMirror_ul]:my-2
+                                [&_.ProseMirror_ol]:list-decimal
+                                [&_.ProseMirror_ol]:ml-6
+                                [&_.ProseMirror_ol]:my-2
+                                [&_.ProseMirror_li]:ml-2
+                                [&_.ProseMirror_li]:my-1
+                            "
+                        />
+                    </div>
 
-
-  <EditorContent
-    editor={editor}
-    className="
-      min-h-[120px]
-      outline-none
-      border-none
-      shadow-none
-      prose prose-sm max-w-none
-      [&_.ProseMirror]:outline-none
-      [&_.ProseMirror]:border-none
-      [&_.ProseMirror]:shadow-none
-      [&_.ProseMirror]:p-2
-      [&_.ProseMirror_p]:my-2
-      [&_.ProseMirror_ul]:list-disc
-      [&_.ProseMirror_ul]:ml-6
-      [&_.ProseMirror_ul]:my-2
-      [&_.ProseMirror_ol]:list-decimal
-      [&_.ProseMirror_ol]:ml-6
-      [&_.ProseMirror_ol]:my-2
-      [&_.ProseMirror_li]:ml-2
-      [&_.ProseMirror_li]:my-1
-    "
-  />
-</div>
-
-
-                    <div className="flex gap-3 flex-wrap">
+                    {/* Actions */}
+                    <div className="flex gap-3 mt-4 flex-wrap">
                         {editingId ? (
-                            <>
-                                <button
-                                    onClick={saveEdit}
-                                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-                                >
-                                    Save Changes
-                                </button> 
-                            </>
+                            <button
+                                onClick={saveEdit}
+                                className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-all duration-200 font-medium shadow-md"
+                            >
+                                Save Changes
+                            </button>
                         ) : (
                             <button
                                 onClick={addNote}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium shadow-md"
                             >
                                 Add Note
                             </button>
                         )}
-                        {/* Mic: Start/Stop toggle */}
+
                         <button
-                          onClick={() => (listening ? stopListening() : startListening())}
-                          className={`px-4 py-2 rounded-lg shadow-md font-medium transition ${
-                            listening
-                            ? "bg-red-500 hover:bg-red-600 text-white"
-                            : "bg-blue-500 hover:bg-blue-600 text-white"
-                          }`}
+                            onClick={() => (listening ? stopListening() : startListening())}
+                            className={`px-4 py-2 rounded-lg shadow-md font-medium transition ${
+                                listening
+                                    ? "bg-red-500 hover:bg-red-600 text-white"
+                                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                            }`}
                         >
-                          {listening ? "⏹ Stop Voice" : "🎙️ Start Voice"}
+                            🎙 {listening ? "Stop" : "Voice"}
                         </button>
-                        {/* Read / Stop Read toggle */}
+
                         <button
-                          onClick={() => (speaking ? stopReading() : startReading())}
-                          className={`px-4 py-2 rounded-lg shadow-md font-medium transition ${
-                            speaking
-                            ? "bg-red-500 hover:bg-red-600 text-white"
-                            : "bg-green-500 hover:bg-green-600 text-white"
-                          }`}
+                            onClick={() => (speaking ? stopReading() : startReading())}
+                            className={`px-4 py-2 rounded-lg shadow-md font-medium transition ${
+                                speaking
+                                    ? "bg-red-500 hover:bg-red-600 text-white"
+                                    : "bg-green-500 hover:bg-green-600 text-white"
+                            }`}
                         >
-                          {speaking ? "⏹ Stop Read" : "🔊 Read"}
-                        </button>
+                            🔊 {speaking ? "Stop" : "Read"}
+                            </button>
                         <button
                             onClick={() => {
                                const ok = window.confirm("Clear current note content? This cannot be undone.");
@@ -673,30 +680,28 @@ useEffect(() => {
                             }}
                             className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-md hover:shadow-lg"
                         >   
-                            Clear
+                            Clear 
                         </button>
                     </div>
+
                     {listening && livePreview && (
-    <p className="text-slate-400 italic mb-3">
-        {livePreview}
-    </p>
-)}
+                        <p className="text-slate-400 italic mt-2">{livePreview}</p>
+                    )}
+                </section>
 
-                </div>
-
-                {/* Notes List */}
+                {/* NOTES GRID */}
                 <div className="grid md:grid-cols-2 gap-4">
-  {notes.length === 0 ? (
+  {filteredNotes.length === 0 ? (
     <p className="col-span-full text-center text-slate-400 italic">
       No notes found
     </p>
   ) : (
-    notes.map((n) => (
+    filteredNotes.map((n) => (
       <div
         key={n.id}
-        className="bg-white shadow-lg border border-slate-100 p-4 rounded-2xl hover:shadow-xl transition-all duration-300"
+        className="shadow-lg border border-slate-100 p-4 rounded-2xl hover:shadow-xl transition-all duration-300"
       >
-        <h4 className="text-xl font-semibold text-slate-800">
+        <h4 className="text-xl font-semibold text-slate-800 text-white">
           {n.original_text}
         </h4>
 
@@ -726,8 +731,15 @@ useEffect(() => {
     ))
   )}
 </div>
+            </main>
 
-            </div>
+            {/* RIGHT PANEL */}
+            <RightPanel
+                noteDateCounts={noteDateCounts}
+                selectedDate={selectedDate}
+                onSelectDate={setSelectedDate}
+            />
+
         </div>
     );
 }
