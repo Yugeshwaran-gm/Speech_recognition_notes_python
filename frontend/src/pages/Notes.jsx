@@ -11,7 +11,7 @@ import RightPanel from "../components/RightPanel";
 
 
 export default function Notes() {
-    const { logout } = useContext(AuthContext);
+    
 
     const [notes, setNotes] = useState([]);
     const [filter, setFilter] = useState("All");
@@ -387,18 +387,28 @@ const handleSpokenText = (spokenText) => {
   // ---- BOLD ----
   if (text.startsWith("bold ")) {
     const value = spokenText.slice(5);
-    editor.chain().focus().toggleBold().run();
-    editor.commands.insertContent(value + " ");
-    editor.chain().focus().toggleBold().run();
+    editor
+      .chain()
+      .focus()
+      .toggleBold()
+      .insertContent(value + " ")
+      .toggleBold()
+      .run();
+    setLastCommandTime(now);
     return;
   }
 
   // ---- ITALIC ----
   if (text.startsWith("italic ")) {
     const value = spokenText.slice(7);
-    editor.chain().focus().toggleItalic().run();
-    editor.commands.insertContent(value + " ");
-    editor.chain().focus().toggleItalic().run();
+    editor
+      .chain()
+      .focus()
+      .toggleItalic()
+      .insertContent(value + " ")
+      .toggleItalic()
+      .run();
+    setLastCommandTime(now);
     return;
   }
 
@@ -406,25 +416,27 @@ const handleSpokenText = (spokenText) => {
   if (text === "bullet point") {
     editor.chain().focus().toggleBulletList().run();
     editor.commands.enter();
+    setLastCommandTime(now);
     return;
   }
 
   // ---- NEXT LINE ----
   if (text === "next line") {
     editor.commands.enter();
+    setLastCommandTime(now);
     return;
   }
   // ---- READ ALOUD ----
-if (text.includes("read ") || text.includes("start reading")) {
-  startReading();
+  if (text.includes("read ") || text.includes("start reading")) {
+    startReading();
   return;
 }
 
 
 if (text.includes("stop reading")) {
   stopReading();
-  return;
-}
+    return;
+  }
 
 
   // ---- NORMAL TEXT ----
@@ -524,13 +536,13 @@ useEffect(() => {
 
 
     return (
-        <div className="min-h-screen bg-[#0B1220] text-white flex">
+        <div className="h-screen bg-[#0B1220] text-white flex">
 
             {/* LEFT SIDEBAR */}
-            <Sidebar />
+            {/* <Sidebar /> */}
 
             {/* CENTER CONTENT */}
-            <main className="flex-1 px-8 py-6 space-y-6 overflow-y-auto">
+            <main className="flex-1 px-8 py-6 space-y-6 overflow-y-auto flex flex-col">
 
                 {/* Header + Search */}
                 <NotesHeader
@@ -726,6 +738,22 @@ useEffect(() => {
           >
             Delete
           </button>
+            {/* Command Panel (opens via Calendar button) */}
+            <CommandPanel
+              open={isCommandOpen}
+              onClose={() => setIsCommandOpen(false)}
+              listening={listening}
+              onToggleListening={() => (listening ? stopListening() : startListening())}
+              speaking={speaking}
+              onToggleSpeaking={() => (speaking ? stopReading() : startReading())}
+              onClear={() => {
+                const ok = window.confirm("Clear current note content? This cannot be undone.");
+                if (!ok) return;
+                setTitle("");
+                editor?.commands.clearContent();
+                setEditingId(null);
+              }}
+            />
         </div>
       </div>
     ))
@@ -737,7 +765,8 @@ useEffect(() => {
             <RightPanel
                 noteDateCounts={noteDateCounts}
                 selectedDate={selectedDate}
-                onSelectDate={setSelectedDate}
+              onSelectDate={setSelectedDate}
+              onOpenCommand={() => setIsCommandOpen(true)}
             />
 
         </div>
