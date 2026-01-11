@@ -5,13 +5,16 @@ import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
 import Sidebar from "../components/Sidebar";
 import NotesHeader from "../components/NotesHeader";
 import RightPanel from "../components/RightPanel";
+import CalendarWidget from "../components/CalendarWidget";
 
 
 export default function Notes() {
-    
+    const { logout } = useContext(AuthContext);
 
     const [notes, setNotes] = useState([]);
     const [filter, setFilter] = useState("All");
@@ -25,7 +28,9 @@ export default function Notes() {
     const [speechUtterance, setSpeechUtterance] = useState(null);
     const [query, setQuery] = useState("");
     const [selectedDate, setSelectedDate] = useState(null); // yyyy-mm-dd
+    const [isCommandOpen, setIsCommandOpen] = useState(false);
     const COMMAND_COOLDOWN = 1200; 
+    const [titleFocused, setTitleFocused] = useState(false);
 
 
 
@@ -364,7 +369,12 @@ const searchNotes = async () => {
 }),
     Placeholder.configure({
       placeholder: "Write your content here..."
-    })
+        }),
+        Underline,
+        TextAlign.configure({
+            types: ["heading", "paragraph"],
+            defaultAlignment: "left"
+        })
   ],
   content,
   onUpdate: ({ editor }) => {
@@ -427,7 +437,7 @@ const handleSpokenText = (spokenText) => {
     return;
   }
   // ---- READ ALOUD ----
-  if (text.includes("read ") || text.includes("start reading")) {
+  if (text.includes("read") || text.includes("start reading")) {
     startReading();
   return;
 }
@@ -442,6 +452,8 @@ if (text.includes("stop reading")) {
   // ---- NORMAL TEXT ----
   editor.commands.insertContent(spokenText + " ");
 };
+
+// Link feature removed as requested
 
 const startReading = () => {
   // Prefer selected text if any, else read entire editor content
@@ -536,238 +548,416 @@ useEffect(() => {
 
 
     return (
-        <div className="h-screen bg-[#0B1220] text-white flex">
+        <div className="h-screen bg-[rgb(242,245,243)] text-[rgb(47,62,70)] flex overflow-hidden">
 
-            {/* LEFT SIDEBAR */}
-            {/* <Sidebar /> */}
-
-            {/* CENTER CONTENT */}
-            <main className="flex-1 px-8 py-6 space-y-6 overflow-y-auto flex flex-col">
-
-                {/* Header + Search */}
-                <NotesHeader
-                    query={query}
-                    onQueryChange={handleSearchChange}
-                    onSearch={searchNotes}
-                />
-            
-                {selectedDate && (
-                  <div className="flex items-center gap-2 text-sm text-slate-300">
-                    <span>
-                      Showing notes for {new Date(selectedDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                    </span>
-                    <button
-                      onClick={() => setSelectedDate(null)}
-                      className="text-blue-400 hover:text-blue-300 underline"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-
-                {/* Editor / Create / Edit */}
-                <section className="bg-[#0F172A] border border-slate-800 rounded-2xl p-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                        {editingId ? "Edit Note" : "Add Note"}
-                    </h3>
-
-                    {/* Title */}
-                    <input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Title"
-                        className="w-full bg-transparent border border-slate-700 rounded-lg px-3 py-2 mb-3 text-white placeholder-slate-400"
+            {/* MAIN CENTER CONTENT */}
+            <main className="flex-1 flex flex-col h-full overflow-y-auto relative p-8 lg:p-12 scroll-smooth">
+                
+                {/* Header */}
+                <header className="flex items-center justify-between mb-12">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-[rgb(45,106,79)] p-2.5 rounded shadow-md">
+                            <span className="material-symbols-outlined text-white text-xl">mic</span>
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold tracking-tight text-[rgb(20,30,25)] font-serif italic">EchoNote</h2>
+                            <p className="text-[10px] uppercase tracking-widest text-[rgb(45,106,79)] font-bold">Where Your Thoughts Echo Back</p>
+                        </div>
+                    </div>
+                    <NotesHeader
+                        query={query}
+                        onQueryChange={handleSearchChange}
+                        onSearch={searchNotes}
                     />
+                </header>
 
-                    {/* Toolbar */}
-                    <div className="flex gap-2 mb-2">
-                        <button
-                            type="button"
-                            onClick={() => editor?.chain().focus().toggleBold().run()}
-                            className={`editor-btn ${editor?.isActive("bold") ? "editor-btn-active" : ""}`}
-                        >
-                            B
-                        </button>
+                {/* Main Content Flex Container */}
+                <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full space-y-20">
+                    
+                    {/* Editor Section */}
+                    <section className="max-w-3xl mx-auto w-full">
+                        <div className="mb-10 text-center">
+                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[rgb(45,106,79)] mb-3 block">
+                                {editingId ? "Edit Note" : "Create New"}
+                            </span>
+                            <input
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                onFocus={() => setTitleFocused(true)}
+                                onBlur={() => setTitleFocused(false)}
+                                placeholder="Title"
+                                className={`w-full bg-transparent border-none text-4xl font-serif font-bold text-[rgb(20,30,25)] placeholder-[rgb(100,116,139)]/40 focus:outline-none mb-3 ${titleFocused ? "text-left" : "text-center"}`}
+                            />
+                            {listening && (
+                                <div className="flex justify-center items-center gap-3">
+                                    <span className="size-2 rounded-full bg-[rgb(45,106,79)] animate-pulse"></span>
+                                    <p className="text-[rgb(45,106,79)]/60 text-xs font-medium italic tracking-wide">
+                                        Listening...
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                            <div className="editor-toolbar flex items-center gap-2 px-4 py-3 border border-[rgb(45,106,79)]/10 bg-white/60 rounded-t-sm">
+                                <button
+                                    className={`format-btn flex items-center justify-center size-9 rounded transition-colors ${
+                                        editor?.isActive("bold") ? "bg-[rgb(242,245,243)] text-[rgb(45,106,79)]" : "text-[rgb(47,62,70)] hover:bg-[rgb(242,245,243)]"
+                                    }`}
+                                    title="Bold"
+                                    onClick={() => editor?.chain().focus().toggleBold().run()}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">format_bold</span>
+                                </button>
 
-                        <button
-                            type="button"
-                            onClick={() => editor?.chain().focus().toggleItalic().run()}
-                            className={`editor-btn ${editor?.isActive("italic") ? "editor-btn-active" : ""}`}
-                        >
-                            I
-                        </button>
+                                <button
+                                    className={`format-btn flex items-center justify-center size-9 rounded transition-colors ${
+                                        editor?.isActive("italic") ? "bg-[rgb(242,245,243)] text-[rgb(45,106,79)]" : "text-[rgb(47,62,70)] hover:bg-[rgb(242,245,243)]"
+                                    }`}
+                                    title="Italic"
+                                    onClick={() => editor?.chain().focus().toggleItalic().run()}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">format_italic</span>
+                                </button>
 
-                        <button
-                            type="button"
-                            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                            className={`editor-btn ${editor?.isActive("bulletList") ? "editor-btn-active" : ""}`}
-                        >
-                            • List
-                        </button>
+                                <button
+                                    className={`format-btn flex items-center justify-center size-9 rounded transition-colors ${
+                                        editor?.isActive("underline") ? "bg-[rgb(242,245,243)] text-[rgb(45,106,79)]" : "text-[rgb(47,62,70)] hover:bg-[rgb(242,245,243)]"
+                                    }`}
+                                    title="Underline"
+                                    onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">format_underlined</span>
+                                </button>
 
-                        <button
-                            type="button"
-                            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                            className={`editor-btn ${editor?.isActive("orderedList") ? "editor-btn-active" : ""}`}
-                        >
-                            1. List
-                        </button>
-                    </div>
+                                <button
+                                    className={`format-btn flex items-center justify-center size-9 rounded transition-colors ${
+                                        editor?.isActive("strike") ? "bg-[rgb(242,245,243)] text-[rgb(45,106,79)]" : "text-[rgb(47,62,70)] hover:bg-[rgb(242,245,243)]"
+                                    }`}
+                                    title="Strikethrough"
+                                    onClick={() => editor?.chain().focus().toggleStrike().run()}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">format_strikethrough</span>
+                                </button>
 
-                    {/* Editor */}
-                    <div
-                        className="border border-slate-700 rounded-lg min-h-[160px] px-3 py-2 cursor-text focus-within:border-blue-400 transition-all"
-                        onClick={() => editor?.commands.focus()}
-                    >
-                        <EditorContent
-                            editor={editor}
-                            className="
-                                outline-none
-                                border-none
-                                shadow-none
-                                prose prose-sm max-w-none text-white
-                                [&_.ProseMirror]:outline-none
-                                [&_.ProseMirror]:border-none
-                                [&_.ProseMirror]:shadow-none
-                                [&_.ProseMirror]:p-0
-                                [&_.ProseMirror_p]:my-2
-                                [&_.ProseMirror_ul]:list-disc
-                                [&_.ProseMirror_ul]:ml-6
-                                [&_.ProseMirror_ul]:my-2
-                                [&_.ProseMirror_ol]:list-decimal
-                                [&_.ProseMirror_ol]:ml-6
-                                [&_.ProseMirror_ol]:my-2
-                                [&_.ProseMirror_li]:ml-2
-                                [&_.ProseMirror_li]:my-1
-                            "
-                        />
-                    </div>
+                                <div className="w-px h-6 bg-[rgb(45,106,79)]/10 mx-2" />
 
-                    {/* Actions */}
-                    <div className="flex gap-3 mt-4 flex-wrap">
-                        {editingId ? (
-                            <button
-                                onClick={saveEdit}
-                                className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-all duration-200 font-medium shadow-md"
+                                <button
+                                    className={`format-btn flex items-center justify-center size-9 rounded transition-colors ${
+                                        editor?.isActive("bulletList") ? "bg-[rgb(242,245,243)] text-[rgb(45,106,79)]" : "text-[rgb(47,62,70)] hover:bg-[rgb(242,245,243)]"
+                                    }`}
+                                    title="Bulleted List"
+                                    onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+                                </button>
+
+                                <button
+                                    className={`format-btn flex items-center justify-center size-9 rounded transition-colors ${
+                                        editor?.isActive("orderedList") ? "bg-[rgb(242,245,243)] text-[rgb(45,106,79)]" : "text-[rgb(47,62,70)] hover:bg-[rgb(242,245,243)]"
+                                    }`}
+                                    title="Numbered List"
+                                    onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">format_list_numbered</span>
+                                </button>
+
+                                <div className="w-px h-6 bg-[rgb(45,106,79)]/10 mx-2" />
+
+                                <button
+                                    className={`format-btn flex items-center justify-center size-9 rounded transition-colors ${
+                                        editor?.isActive({ textAlign: "left" }) ? "bg-[rgb(242,245,243)] text-[rgb(45,106,79)]" : "text-[rgb(47,62,70)] hover:bg-[rgb(242,245,243)]"
+                                    }`}
+                                    title="Align Left"
+                                    onClick={() => editor?.chain().focus().setTextAlign("left").run()}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">format_align_left</span>
+                                </button>
+
+                                <button
+                                    className={`format-btn flex items-center justify-center size-9 rounded transition-colors ${
+                                        editor?.isActive({ textAlign: "justify" }) ? "bg-[rgb(242,245,243)] text-[rgb(45,106,79)]" : "text-[rgb(47,62,70)] hover:bg-[rgb(242,245,243)]"
+                                    }`}
+                                    title="Align Justify"
+                                    onClick={() => editor?.chain().focus().setTextAlign("justify").run()}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">format_align_justify</span>
+                                </button>
+                            </div>
+                        {/* Editor Paper Texture Card */}
+                        <div className="relative bg-white bg-[url('https://www.transparenttextures.com/patterns/felt.png')] border-[rgb(45,106,79)]/10 border-x border-b rounded-b-sm p-14 shadow-xl min-h-[500px] flex flex-col">
+                            
+                          {/* Editor Content */}
+                            <div
+                                className="flex-1 overflow-y-auto cursor-text focus-within:outline-none"
+                                onClick={() => editor?.commands.focus()}
                             >
-                                Save Changes
-                            </button>
-                        ) : (
-                            <button
-                                onClick={addNote}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium shadow-md"
-                            >
-                                Add Note
-                            </button>
+                                <EditorContent
+                                    editor={editor}
+                                    className="
+                                        outline-none
+                                        border-none
+                                        shadow-none
+                                        prose prose-sm max-w-none text-[rgb(20,30,25)]
+                                        font-serif text-xl leading-relaxed
+                                        [&_.ProseMirror]:outline-none
+                                        [&_.ProseMirror]:border-none
+                                        [&_.ProseMirror]:shadow-none
+                                        [&_.ProseMirror]:p-0
+                                        [&_.ProseMirror_p]:my-4
+                                        [&_.ProseMirror_ul]:list-disc
+                                        [&_.ProseMirror_ul]:ml-6
+                                        [&_.ProseMirror_ul]:my-4
+                                        [&_.ProseMirror_ol]:list-decimal
+                                        [&_.ProseMirror_ol]:ml-6
+                                        [&_.ProseMirror_ol]:my-4
+                                        [&_.ProseMirror_li]:ml-2
+                                        [&_.ProseMirror_li]:my-2
+                                    "
+                                />
+                            </div>
+
+                            {/* {listening && livePreview && (
+                                <p className="text-[rgb(100,116,139)] italic mt-4 pt-4 border-t border-[rgb(45,106,79)]/10">
+                                    <span className="font-semibold">Listening:</span> {livePreview}
+                                </p>
+                            )} */}
+
+                            {/* Action Buttons - Floating Bottom Bar */}
+                            <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-[rgb(47,62,70)] text-white px-10 py-4 rounded-full shadow-2xl flex items-center justify-center gap-10 ring-4 ring-[rgb(45,106,79)]/5 z-10">
+                                
+                                <button
+                                    onClick={() => {
+                                        const ok = window.confirm("Annotate this note?");
+                                        if (ok) {
+                                            // Annotation logic here
+                                        }
+                                    }}
+                                    className="flex flex-col items-center gap-1 group"
+                                    title="Annotate"
+                                >
+                                    <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">edit_note</span>
+                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Annotate</span>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        const ok = window.confirm("Clear current note content? This cannot be undone.");
+                                        if (!ok) return;
+                                        setTitle("");
+                                        editor?.commands.clearContent();
+                                        setEditingId(null);
+                                    }}
+                                    className="flex flex-col items-center gap-1 group"
+                                    title="Clear"
+                                >
+                                    <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">delete_outline</span>
+                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Clear</span>
+                                </button>
+
+                                {/* Center Mic Button - Larger & Green */}
+                                <button
+                                    onClick={() => (listening ? stopListening() : startListening())}
+                                    className={`${
+                                        listening
+                                            ? "bg-[rgb(52,211,153)] shadow-lg shadow-[rgb(52,211,153)]/60 animate-pulse"
+                                            : "bg-[rgb(52,211,153)] hover:bg-[rgb(45,190,145)]"
+                                    } w-16 h-16 rounded-full flex items-center justify-center relative group hover:scale-110 transition-all flex-shrink-0`}
+                                    title={listening ? "Stop Listening" : "Start Listening"}
+                                >
+                                    <span className="material-symbols-outlined text-white text-3xl">mic</span>
+                                </button>
+
+                                <button
+                                    onClick={() => (speaking ? stopReading() : startReading())}
+                                    className="flex flex-col items-center gap-1 group"
+                                    title={speaking ? "Stop Reading" : "Start Reading"}
+                                >
+                                    <span className={`material-symbols-outlined transition-colors text-2xl ${
+                                        speaking ? "text-[rgb(239,68,68)]" : "text-[rgb(52,211,153)]"
+                                    } group-hover:scale-110`}>
+                                        play_arrow
+                                    </span>
+                                    <span className={`text-[8px] font-bold uppercase tracking-widest ${
+                                        speaking ? "text-[rgb(239,68,68)]" : "text-[rgb(52,211,153)]"
+                                    }`}>
+                                        Reading
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        const noteContent = `${title}\n\n${editor?.getText() || ""}`;
+                                        const element = document.createElement("a");
+                                        element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(noteContent));
+                                        element.setAttribute("download", `${title || "note"}.txt`);
+                                        element.style.display = "none";
+                                        document.body.appendChild(element);
+                                        element.click();
+                                        document.body.removeChild(element);
+                                    }}
+                                    className="flex flex-col items-center gap-1 group"
+                                    title="Export"
+                                >
+                                    <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">upload</span>
+                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Export</span>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Recent Notes Section */}
+                    <section className="w-full pb-20">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <span className="material-symbols-outlined text-[rgb(45,106,79)]">history</span>
+                                <h3 className="text-xl font-serif font-bold text-[rgb(20,30,25)]">Recent Notes</h3>
+                            </div>
+                        </div>
+
+                        {selectedDate && (
+                            <div className="flex items-center gap-2 text-sm text-[rgb(100,116,139)] mb-6">
+                                <span>
+                                    Showing notes for {new Date(selectedDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                                </span>
+                                <button
+                                    onClick={() => setSelectedDate(null)}
+                                    className="text-[rgb(45,106,79)] hover:text-[rgb(27,67,50)] underline"
+                                >
+                                    Clear
+                                </button>
+                            </div>
                         )}
 
-                        <button
-                            onClick={() => (listening ? stopListening() : startListening())}
-                            className={`px-4 py-2 rounded-lg shadow-md font-medium transition ${
-                                listening
-                                    ? "bg-red-500 hover:bg-red-600 text-white"
-                                    : "bg-blue-500 hover:bg-blue-600 text-white"
-                            }`}
-                        >
-                            🎙 {listening ? "Stop" : "Voice"}
-                        </button>
-
-                        <button
-                            onClick={() => (speaking ? stopReading() : startReading())}
-                            className={`px-4 py-2 rounded-lg shadow-md font-medium transition ${
-                                speaking
-                                    ? "bg-red-500 hover:bg-red-600 text-white"
-                                    : "bg-green-500 hover:bg-green-600 text-white"
-                            }`}
-                        >
-                            🔊 {speaking ? "Stop" : "Read"}
-                            </button>
-                        <button
-                            onClick={() => {
-                               const ok = window.confirm("Clear current note content? This cannot be undone.");
-                               if (!ok) return;
-                               setTitle("");
-                               editor?.commands.clearContent();
-                               setEditingId(null);
-                            }}
-                            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-                        >   
-                            Clear 
-                        </button>
-                    </div>
-
-                    {listening && livePreview && (
-                        <p className="text-slate-400 italic mt-2">{livePreview}</p>
-                    )}
-                </section>
-
-                {/* NOTES GRID */}
-                <div className="grid md:grid-cols-2 gap-4">
-  {filteredNotes.length === 0 ? (
-    <p className="col-span-full text-center text-slate-400 italic">
-      No notes found
-    </p>
-  ) : (
-    filteredNotes.map((n) => (
-      <div
-        key={n.id}
-        className="shadow-lg border border-slate-100 p-4 rounded-2xl hover:shadow-xl transition-all duration-300"
-      >
-        <h4 className="text-xl font-semibold text-slate-800 text-white">
-          {n.original_text}
-        </h4>
-
-        {n.translated_text && (
-          <div
-            className="text-slate-600 mt-2 prose max-w-none"
-            dangerouslySetInnerHTML={{ __html: n.translated_text }}
-          />
-        )}
-
-        <div className="flex gap-3 mt-4">
-          <button
-            onClick={() => startEdit(n)}
-            className="bg-amber-500 text-white px-3 py-1 rounded-lg hover:bg-amber-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-          >
-            Edit
-          </button>
-
-          <button
-            onClick={() => deleteNote(n.id)}
-            className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-          >
-            Delete
-          </button>
-            {/* Command Panel (opens via Calendar button) */}
-            <CommandPanel
-              open={isCommandOpen}
-              onClose={() => setIsCommandOpen(false)}
-              listening={listening}
-              onToggleListening={() => (listening ? stopListening() : startListening())}
-              speaking={speaking}
-              onToggleSpeaking={() => (speaking ? stopReading() : startReading())}
-              onClear={() => {
-                const ok = window.confirm("Clear current note content? This cannot be undone.");
-                if (!ok) return;
-                setTitle("");
-                editor?.commands.clearContent();
-                setEditingId(null);
-              }}
-            />
-        </div>
-      </div>
-    ))
-  )}
-</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredNotes.length === 0 ? (
+                                <p className="col-span-full text-center text-[rgb(100,116,139)] italic">
+                                    No notes found
+                                </p>
+                            ) : (
+                                filteredNotes.map((n) => (
+                                    <div
+                                        key={n.id}
+                                        className="bg-white/50 border border-[rgb(45,106,79)]/10 p-5 rounded-lg transition-all hover:bg-white hover:shadow-md hover:border-[rgb(45,106,79)]/20 group flex flex-col justify-between"
+                                    >
+                                        <div>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <span className="text-[10px] font-bold text-[rgb(47,62,70)]/40 uppercase tracking-tighter">
+                                                    {new Date(n.created_at).toLocaleDateString()}
+                                                </span>
+                                                <div className="flex gap-1">
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(n.original_text + "\n" + n.translated_text);
+                                                            alert("Copied to clipboard!");
+                                                        }}
+                                                        className="text-[rgb(45,106,79)]/40 hover:text-[rgb(45,106,79)] transition-colors"
+                                                        title="Copy All"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">content_copy</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <h4 className="font-serif font-bold text-[rgb(20,30,25)] text-lg mb-2 group-hover:text-[rgb(45,106,79)] transition-colors">
+                                                {n.original_text}
+                                            </h4>
+                                            <p className="text-sm text-[rgb(47,62,70)]/70 leading-relaxed line-clamp-3 mb-4">
+                                                {n.translated_text?.replace(/<[^>]*>/g, "") || "No content"}
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => startEdit(n)}
+                                                className="flex-1 bg-[rgb(45,106,79)] text-white px-3 py-2 rounded text-sm hover:bg-[rgb(27,67,50)] transition-all duration-200 font-medium shadow-md"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => deleteNote(n.id)}
+                                                className="flex-1 bg-[rgb(239,68,68)] text-white px-3 py-2 rounded text-sm hover:bg-[rgb(220,38,38)] transition-all duration-200 font-medium shadow-md"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </section>
+                </div>
             </main>
 
-            {/* RIGHT PANEL */}
-            <RightPanel
-                noteDateCounts={noteDateCounts}
-                selectedDate={selectedDate}
-              onSelectDate={setSelectedDate}
-              onOpenCommand={() => setIsCommandOpen(true)}
-            />
+            {/* RIGHT SIDEBAR */}
+            <aside className="w-80 bg-[rgba(236,245,240,0.7)] backdrop-blur-md border-l border-[rgb(45,106,79)]/10 shadow-sm flex flex-col z-20 h-full overflow-y-auto">
+                <div className="p-8 border-b border-[rgb(45,106,79)]/10 space-y-6 flex-1">
+                    <CalendarWidget
+                        noteDateCounts={noteDateCounts}
+                        selectedDate={selectedDate}
+                        onSelectDate={setSelectedDate}
+                    />
+                    
+                    <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-[rgb(45,106,79)]/60 mb-4">
+                            Acoustic Commands
+                        </h4>
+                        <div className="space-y-3">
+                            <div className={`bg-white/60 p-5 rounded-lg border-l-4 transition-all cursor-pointer ${
+                                listening
+                                    ? "border-[rgb(45,106,79)] bg-white shadow-sm"
+                                    : "border-transparent hover:border-[rgb(45,106,79)]/30"
+                            }`}>
+                                <div className="flex justify-between items-start mb-1">
+                                    <p className="text-[9px] font-black text-[rgb(45,106,79)] uppercase tracking-wider italic">
+                                        {listening ? "Listening..." : "Ready"}
+                                    </p>
+                                    <span className="material-symbols-outlined text-[rgb(45,106,79)]/40 text-sm">
+                                        {listening ? "bolt" : "mic"}
+                                    </span>
+                                </div>
+                                <p className="font-serif font-bold text-[rgb(20,30,25)] text-lg leading-tight">
+                                    {listening ? "Speak now..." : '"Start voice note"'}
+                                </p>
+                            </div>
+
+                            <div className="bg-white/30 p-5 rounded-lg border-l-4 border-transparent hover:border-[rgb(45,106,79)]/30 transition-all cursor-pointer">
+                                <p className="text-[9px] font-bold text-[rgb(47,62,70)]/40 mb-1 uppercase tracking-wider">
+                                    Common Command
+                                </p>
+                                <p className="font-serif font-bold text-[rgb(47,62,70)]/70 text-lg leading-tight">
+                                    "Bold this text"
+                                </p>
+                            </div>
+
+                            <div className="bg-white/30 p-5 rounded-lg border-l-4 border-transparent hover:border-[rgb(45,106,79)]/30 transition-all cursor-pointer">
+                                <p className="text-[9px] font-bold text-[rgb(47,62,70)]/40 mb-1 uppercase tracking-wider">
+                                    Common Command
+                                </p>
+                                <p className="font-serif font-bold text-[rgb(47,62,70)]/70 text-lg leading-tight">
+                                    "Read aloud"
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-8 bg-[rgb(45,106,79)]/5 border-t border-[rgb(45,106,79)]/10 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="size-2.5 rounded-full bg-[rgb(45,106,79)] shadow-[0_0_10px_rgba(45,106,79,0.5)]"></div>
+                            <span className="text-[10px] font-black text-[rgb(20,30,25)] uppercase tracking-widest">
+                                {speaking ? "Reading: ON" : "Ready"}
+                            </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-[rgb(45,106,79)]/40">V.1.0-ECHO</span>
+                    </div>
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center justify-between py-4 px-6 bg-[rgb(47,62,70)] text-white rounded-md hover:bg-[rgb(45,106,79)] transition-all group shadow-lg"
+                    >
+                        <span className="text-xs font-black uppercase tracking-widest">End Session</span>
+                        <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">logout</span>
+                    </button>
+                </div>
+            </aside>
 
         </div>
     );

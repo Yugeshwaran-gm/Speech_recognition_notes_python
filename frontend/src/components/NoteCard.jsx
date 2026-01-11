@@ -11,18 +11,18 @@ const NoteCard = ({ note, updateNote, deleteNote }) => {
     };
 
     return (
-        <div className="bg-white shadow p-4 rounded-lg">
+        <div className="bg-[rgb(255,255,255)] shadow p-4 rounded-lg border border-[rgb(226,232,240)]">
             {isEditing ? (
                 <>
                     <input
                         type="text"
-                        className="w-full border p-2 rounded mb-2"
+                        className="w-full border border-[rgb(226,232,240)] p-2 rounded mb-2 text-[rgb(15,23,42)]"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                     />
 
                     <textarea
-                        className="w-full border p-2 rounded mb-2 h-24 resize-none"
+                        className="w-full border border-[rgb(226,232,240)] p-2 rounded mb-2 h-24 resize-none text-[rgb(15,23,42)]"
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                     />
@@ -30,14 +30,14 @@ const NoteCard = ({ note, updateNote, deleteNote }) => {
                     <div className="flex gap-2">
                         <button
                             onClick={saveChanges}
-                            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                            className="bg-[rgb(45,106,79)] text-white px-3 py-1 rounded hover:bg-[rgb(27,67,50)]"
                         >
                             Save
                         </button>
 
                         <button
                             onClick={() => setIsEditing(false)}
-                            className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
+                            className="bg-[rgb(100,116,139)] text-white px-3 py-1 rounded hover:bg-[rgb(51,65,85)]"
                         >
                             Cancel
                         </button>
@@ -45,20 +45,20 @@ const NoteCard = ({ note, updateNote, deleteNote }) => {
                 </>
             ) : (
                 <>
-                    <h3 className="text-xl font-semibold mb-2">{note.title}</h3>
-                    <p className="text-gray-700 mb-3">{note.content}</p>
+                    <h3 className="text-xl font-semibold mb-2 text-[rgb(15,23,42)]">{note.title}</h3>
+                    <p className="text-[rgb(100,116,139)] mb-3">{note.content}</p>
 
                     <div className="flex gap-2">
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                            className="bg-[rgb(45,106,79)] text-white px-3 py-1 rounded hover:bg-[rgb(27,67,50)]"
                         >
                             Edit
                         </button>
 
                         <button
                             onClick={() => deleteNote(note.id)}
-                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                            className="bg-[rgb(239,68,68)] text-white px-3 py-1 rounded hover:bg-[rgb(220,38,38)]"
                         >
                             Delete
                         </button>

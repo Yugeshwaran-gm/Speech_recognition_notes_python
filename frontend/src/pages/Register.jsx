@@ -41,15 +41,15 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen flex overflow-hidden bg-gradient-to-r from-euca-50 via-emerald-50 to-euca-100">
+        <div className="min-h-screen flex overflow-hidden bg-gradient-to-r from-[rgb(240,244,242)] via-[rgb(216,243,232)] to-[rgb(240,244,242)]">
             
 
             {/* Left Section - White Card */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 pt-24">
                 <div className="w-full max-w-md">
-                    <div className="bg-white rounded-3xl p-8 lg:p-10 shadow-lg border border-euca-100 backdrop-blur transform transition-all duration-500 hover:shadow-xl">
+                    <div className="bg-white rounded-3xl p-8 lg:p-10 shadow-lg border border-[rgb(226,232,240)] backdrop-blur transform transition-all duration-500 hover:shadow-xl">
                         {/* Welcome Text */}
-                        <h1 className="text-5xl lg:text-6xl font-bold text-euca-700 italic mb-6">
+                        <h1 className="text-5xl lg:text-6xl font-bold text-[rgb(27,67,50)] italic mb-6">
                             Welcome
                         </h1>
 
@@ -62,7 +62,7 @@ const Register = () => {
 
                         {/* Success Message */}
                         {success && (
-                            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm flex items-center gap-2 animate-pulse">
+                            <div className="mb-6 p-4 bg-[rgb(216,243,232)] border border-[rgb(45,106,79)] text-[rgb(27,67,50)] rounded-lg text-sm flex items-center gap-2 animate-pulse">
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
@@ -79,7 +79,7 @@ const Register = () => {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 required
-                                className="w-full bg-slate-50 border-2 border-euca-200 rounded-full px-4 py-3 focus:border-euca-500 focus:bg-white outline-none text-slate-900 placeholder-slate-400 transition-all duration-200 text-sm"
+                                className="w-full bg-[rgb(248,250,249)] border-2 border-[rgb(226,232,240)] rounded-full px-4 py-3 focus:border-[rgb(45,106,79)] focus:bg-white outline-none text-[rgb(15,23,42)] placeholder-[rgb(100,116,139)] transition-all duration-200 text-sm"
                             />
 
                             {/* Email Input */}
@@ -89,7 +89,7 @@ const Register = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full bg-slate-50 border-2 border-euca-200 rounded-full px-4 py-3 focus:border-euca-500 focus:bg-white outline-none text-slate-900 placeholder-slate-400 transition-all duration-200 text-sm"
+                                className="w-full bg-[rgb(248,250,249)] border-2 border-[rgb(226,232,240)] rounded-full px-4 py-3 focus:border-[rgb(45,106,79)] focus:bg-white outline-none text-[rgb(15,23,42)] placeholder-[rgb(100,116,139)] transition-all duration-200 text-sm"
                             />
 
                             {/* Password Section */}
@@ -100,12 +100,12 @@ const Register = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className="w-full bg-slate-50 border-2 border-euca-200 rounded-full px-4 py-3 pr-10 focus:border-euca-500 focus:bg-white outline-none text-slate-900 placeholder-slate-400 transition-all duration-200 text-sm"
+                                    className="w-full bg-[rgb(248,250,249)] border-2 border-[rgb(226,232,240)] rounded-full px-4 py-3 pr-10 focus:border-[rgb(45,106,79)] focus:bg-white outline-none text-[rgb(15,23,42)] placeholder-[rgb(100,116,139)] transition-all duration-200 text-sm"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[rgb(100,116,139)] hover:text-[rgb(15,23,42)] transition-colors"
                                 >
                                     {showPassword ? "👁️" : "👁️‍🗨️"}
                                 </button>
@@ -117,9 +117,9 @@ const Register = () => {
                                     type="checkbox"
                                     id="terms"
                                     required
-                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                    className="w-4 h-4 rounded border-[rgb(226,232,240)] text-[rgb(45,106,79)] focus:ring-[rgb(45,106,79)] cursor-pointer"
                                 />
-                                <label htmlFor="terms" className="ml-2 text-xs text-slate-600 cursor-pointer">
+                                <label htmlFor="terms" className="ml-2 text-xs text-[rgb(100,116,139)] cursor-pointer">
                                     I agree to the Terms & Conditions
                                 </label>
                             </div>
@@ -128,7 +128,7 @@ const Register = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-euca-600 text-white font-bold py-3 rounded-full hover:bg-euca-500 hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                                className="w-full bg-[rgb(45,106,79)] text-white font-bold py-3 rounded-full hover:bg-[rgb(27,67,50)] hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
                             >
                                 {loading ? "Creating account..." : "Create Account"}
                             </button>
@@ -138,11 +138,11 @@ const Register = () => {
                         
 
                         {/* Login Link */}
-                        <p className="text-center mt-6 text-slate-600 text-sm">
+                        <p className="text-center mt-6 text-[rgb(100,116,139)] text-sm">
                             Already have an account?{" "}
                             <Link
                                 to="/login"
-                                className="text-euca-700 font-bold hover:text-euca-600 hover:underline transition-colors duration-200"
+                                className="text-[rgb(45,106,79)] font-bold hover:text-[rgb(27,67,50)] hover:underline transition-colors duration-200"
                             >
                                 Sign in
                             </Link>
@@ -160,7 +160,7 @@ const Register = () => {
                     backgroundPosition: 'center',
                 }}
             >
-                <div className="absolute inset-0 bg-gradient-to-t from-euca-700/30 to-transparent opacity-40"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgb(27,67,50)]/30 to-transparent opacity-40"></div>
             </div>
         </div>
     );

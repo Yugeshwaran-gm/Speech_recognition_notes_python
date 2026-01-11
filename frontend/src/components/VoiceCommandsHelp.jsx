@@ -27,10 +27,10 @@ export default function VoiceCommandsHelp() {
     <div
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      className="group bg-[#0F172A] border border-slate-800 rounded-xl px-5 py-4 text-sm text-slate-300 shadow-sm hover:shadow-md transition-shadow hover:border-blue-700/50 [perspective:800px]"
+      className="group bg-[rgb(255,255,255)] border border-[rgb(226,232,240)] rounded-xl px-5 py-4 text-sm text-[rgb(100,116,139)] shadow-sm hover:shadow-md transition-shadow hover:border-[rgb(45,106,79)]/50 [perspective:800px]"
     >
       <div className="flex items-center gap-2">
-        <span className="text-blue-400 font-semibold">🎙️ Voice Help</span>
+        <span className="text-[rgb(45,106,79)] font-semibold">🎙️ Voice Help</span>
       </div>
       <div
         aria-live="polite"
@@ -39,7 +39,7 @@ export default function VoiceCommandsHelp() {
       >
         {COMMANDS[index]}
       </div>
-      <span className="block text-[11px] text-slate-500 mt-2">
+      <span className="block text-[11px] text-[rgb(100,116,139)] mt-2">
         Hover to pause • All commands require ~1s gap
       </span>
     </div>
