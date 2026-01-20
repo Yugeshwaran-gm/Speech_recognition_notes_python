@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Notes from "./pages/Notes";
 import Home from "./pages/Home";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ExportPDF from "./pages/ExportPDF";
 
 function App() {
     return (
@@ -17,6 +18,14 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <Notes />
+                    </ProtectedRoute>
+                }
+            />
+            <Route 
+                path="/export"
+                element={
+                    <ProtectedRoute>
+                        <ExportPDF />
                     </ProtectedRoute>
                 }
             />

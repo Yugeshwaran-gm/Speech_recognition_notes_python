@@ -7,9 +7,9 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
-import Sidebar from "../components/Sidebar";
+import Highlight from "@tiptap/extension-highlight";
 import NotesHeader from "../components/NotesHeader";
-import RightPanel from "../components/RightPanel";
+import VoiceCommandsHelp from "../components/VoiceCommandsHelp.jsx";
 import CalendarWidget from "../components/CalendarWidget";
 
 
@@ -246,8 +246,8 @@ const searchNotes = async () => {
       const clean = text.replace(/\s+/g, " ").trim();
       if (!clean) return "";
       const words = clean.split(" ");
-      const slice = words.slice(0, 6).join(" ");
-      return slice.charAt(0).toUpperCase() + slice.slice(1);
+      const firstTwoWords = words.slice(0, 2).join(" ");
+      return firstTwoWords.charAt(0).toUpperCase() + firstTwoWords.slice(1);
     };
 
     // Highlight the currently spoken word in the editor by selecting it
@@ -374,6 +374,9 @@ const searchNotes = async () => {
         TextAlign.configure({
             types: ["heading", "paragraph"],
             defaultAlignment: "left"
+        }),
+        Highlight.configure({
+            multicolor: true
         })
   ],
   content,
@@ -407,7 +410,6 @@ const handleSpokenText = (spokenText) => {
     setLastCommandTime(now);
     return;
   }
-
   // ---- ITALIC ----
   if (text.startsWith("italic ")) {
     const value = spokenText.slice(7);
@@ -417,6 +419,20 @@ const handleSpokenText = (spokenText) => {
       .toggleItalic()
       .insertContent(value + " ")
       .toggleItalic()
+      .run();
+    setLastCommandTime(now);
+    return;
+  }
+
+  // ---- HIGHLIGHT ----
+  if (text.startsWith("highlight ")) {
+    const value = spokenText.slice(10);
+    editor
+      .chain()
+      .focus()
+      .toggleHighlight({ color: "#ffeaa7" })
+      .insertContent(value + " ")
+      .toggleHighlight({ color: "#ffeaa7" })
       .run();
     setLastCommandTime(now);
     return;
@@ -681,6 +697,16 @@ useEffect(() => {
                                 >
                                     <span className="material-symbols-outlined text-[20px]">format_align_justify</span>
                                 </button>
+
+                                <button
+                                    className={`format-btn flex items-center justify-center size-9 rounded transition-colors ${
+                                        editor?.isActive("highlight") ? "bg-[#ffeaa7] text-[rgb(47,62,70)]" : "text-[rgb(47,62,70)] hover:bg-[rgb(242,245,243)]"
+                                    }`}
+                                    title="Highlight Text"
+                                    onClick={() => editor?.chain().focus().toggleHighlight({ color: "#ffeaa7" }).run()}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">highlight</span>
+                                </button>
                             </div>
                         {/* Editor Paper Texture Card */}
                         <div className="relative bg-white bg-[url('https://www.transparenttextures.com/patterns/felt.png')] border-[rgb(45,106,79)]/10 border-x border-b rounded-b-sm p-14 shadow-xl min-h-[500px] flex flex-col">
@@ -715,27 +741,31 @@ useEffect(() => {
                                 />
                             </div>
 
-                            {/* {listening && livePreview && (
-                                <p className="text-[rgb(100,116,139)] italic mt-4 pt-4 border-t border-[rgb(45,106,79)]/10">
-                                    <span className="font-semibold">Listening:</span> {livePreview}
-                                </p>
-                            )} */}
+                            {listening && livePreview && (
+                                <div className="pointer-events-none absolute left-6 right-6 bottom-16 sm:bottom-20 md:bottom-24 lg:bottom-28 z-20 flex justify-center">
+                                    <div className="inline-flex max-w-full items-center gap-2 bg-[rgb(242,245,243)]/95 border border-[rgb(45,106,79)]/20 text-[rgb(47,62,70)] rounded-full px-4 py-2 shadow-md backdrop-blur-sm text-sm animate-pulse">
+                                        <span className="font-semibold text-[rgb(45,106,79)]">Listening</span>
+                                        <span className="text-[rgb(100,116,139)]">•</span>
+                                        <span className="truncate max-w-[65ch]">{livePreview}</span>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Action Buttons - Floating Bottom Bar */}
                             <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-[rgb(47,62,70)] text-white px-10 py-4 rounded-full shadow-2xl flex items-center justify-center gap-10 ring-4 ring-[rgb(45,106,79)]/5 z-10">
                                 
                                 <button
-                                    onClick={() => {
-                                        const ok = window.confirm("Annotate this note?");
-                                        if (ok) {
-                                            // Annotation logic here
-                                        }
-                                    }}
+                                    // onClick={() => {
+                                    //     const ok = window.confirm("Create this note?");
+                                    //     if (ok) {
+                                    //         // Annotation logic here
+                                    //     }
+                                    // }}
                                     className="flex flex-col items-center gap-1 group"
-                                    title="Annotate"
+                                    title="Create Note"
                                 >
                                     <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">edit_note</span>
-                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Annotate</span>
+                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Create </span>
                                 </button>
 
                                 <button
@@ -785,20 +815,19 @@ useEffect(() => {
 
                                 <button
                                     onClick={() => {
-                                        const noteContent = `${title}\n\n${editor?.getText() || ""}`;
-                                        const element = document.createElement("a");
-                                        element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(noteContent));
-                                        element.setAttribute("download", `${title || "note"}.txt`);
-                                        element.style.display = "none";
-                                        document.body.appendChild(element);
-                                        element.click();
-                                        document.body.removeChild(element);
+                                        const payload = {
+                                            title: (title && title.trim()) ? title.trim() : "Untitled",
+                                            contentHTML: editor?.getHTML() || "",
+                                            createdAt: new Date().toISOString(),
+                                        };
+                                        localStorage.setItem("export_note", JSON.stringify(payload));
+                                        window.open("/export", "_blank");
                                     }}
                                     className="flex flex-col items-center gap-1 group"
-                                    title="Export"
+                                    title="Export as PDF"
                                 >
-                                    <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">upload</span>
-                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Export</span>
+                                    <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">picture_as_pdf</span>
+                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Export PDF</span>
                                 </button>
                             </div>
                         </div>
@@ -893,8 +922,10 @@ useEffect(() => {
                         selectedDate={selectedDate}
                         onSelectDate={setSelectedDate}
                     />
-                    
                     <div>
+                        <VoiceCommandsHelp />
+                    </div>
+                    {/* <div>
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-[rgb(45,106,79)]/60 mb-4">
                             Acoustic Commands
                         </h4>
@@ -935,7 +966,7 @@ useEffect(() => {
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Footer */}
