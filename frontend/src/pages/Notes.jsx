@@ -191,9 +191,9 @@ const searchNotes = async () => {
     // Save Edited Note
    
     const saveEdit = async () => {
-        if (!title.trim()) return;
-        const ok = window.confirm("Save changes to this note?");
-        if (!ok) return;
+        // if (!title.trim()) return;
+        // const ok = window.confirm("Save changes to this note?");
+        // if (!ok) return;
 
         try {
             await api.put(`/notes/${editingId}`, {
@@ -707,15 +707,31 @@ useEffect(() => {
                                 >
                                     <span className="material-symbols-outlined text-[20px]">highlight</span>
                                 </button>
+                                
                             </div>
                         {/* Editor Paper Texture Card */}
                         <div className="relative bg-white bg-[url('https://www.transparenttextures.com/patterns/felt.png')] border-[rgb(45,106,79)]/10 border-x border-b rounded-b-sm p-14 shadow-xl min-h-[500px] flex flex-col">
+                            
+                            {/* Copy Button in Top Right Corner */}
+                            <button
+                                onClick={() => {
+                                    const editorText = editor?.getText() || "";
+                                    const titleText = title || "";
+                                    navigator.clipboard.writeText(titleText + "\n" + editorText);
+                                    alert("Copied to clipboard!");
+                                }}
+                                className="absolute top-5 right-5 text-[rgb(45,106,79)]/30 hover:text-[rgb(45,106,79)] transition-colors"
+                                title="Copy All"
+                            >
+                                <span className="material-symbols-outlined text-2xl">content_copy</span>
+                            </button>
                             
                           {/* Editor Content */}
                             <div
                                 className="flex-1 overflow-y-auto cursor-text focus-within:outline-none"
                                 onClick={() => editor?.commands.focus()}
                             >
+                                
                                 <EditorContent
                                     editor={editor}
                                     className="
@@ -755,18 +771,26 @@ useEffect(() => {
                             <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-[rgb(47,62,70)] text-white px-10 py-4 rounded-full shadow-2xl flex items-center justify-center gap-10 ring-4 ring-[rgb(45,106,79)]/5 z-10">
                                 
                                 <button
-                                    // onClick={() => {
-                                    //     const ok = window.confirm("Create this note?");
-                                    //     if (ok) {
-                                    //         // Annotation logic here
-                                    //     }
-                                    // }}
-                                    className="flex flex-col items-center gap-1 group"
-                                    title="Create Note"
+                                    onClick={() => {
+        const isEdit = editingId !== null;
+
+        const ok = window.confirm(
+            isEdit ? "Save changes to this note?" : "Create this note?"
+        );
+        if (!ok) return;
+
+        isEdit ? saveEdit() : addNote();
+    }}
+    className="flex flex-col items-center gap-1 group"
+    title={editingId ? "Edit Note" : "Create Note"}
                                 >
-                                    <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">edit_note</span>
-                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Create </span>
-                                </button>
+                                    <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">
+        {editingId ? "edit" : "edit_note"}
+    </span>
+
+    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">
+        {editingId ? "Edit" : "Create"}
+    </span>                                </button>
 
                                 <button
                                     onClick={() => {
