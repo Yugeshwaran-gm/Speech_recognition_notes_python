@@ -63,13 +63,11 @@ export default function ExportPDF() {
       <div className="pdf-container">
         {/* Header */}
         <header className="flex items-start justify-between mb-16">
-          <div className="flex items-center gap-4">
-            <div className="bg-[#14B8A6] w-10 h-10 rounded-lg flex items-center justify-center shadow-sm">
-              <span className="material-symbols-outlined text-white text-2xl">mic</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <img src="/logo-lightbg.png" alt="EchoNote Logo" className="w-10 h-10" />
             <div>
               <h2 className="text-xl font-extrabold tracking-tight text-[#1E293B] leading-none">EchoNote</h2>
-              <p className="text-[9pt] text-[#14B8A6] font-medium mt-1 tracking-wide">Intelligent Audio Synthesis</p>
+              <p className="text-[9pt] text-[#14B8A6] font-medium mt-1 tracking-wide">Where Your Thoughts Echo Back</p>
             </div>
           </div>
           <div className="text-right flex flex-col gap-1 border-r-2 border-[#14B8A6]/20 pr-4">

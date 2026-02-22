@@ -242,12 +242,22 @@ const searchNotes = async () => {
 };
 
     const deriveTitleFromText = (text) => {
-      if (!text) return "";
-      const clean = text.replace(/\s+/g, " ").trim();
+      if (!text || typeof text !== "string") return "";
+      // Clean up whitespace
+      const clean = text.trim();
       if (!clean) return "";
-      const words = clean.split(" ");
-      const firstTwoWords = words.slice(0, 2).join(" ");
-      return firstTwoWords.charAt(0).toUpperCase() + firstTwoWords.slice(1);
+      // Extract just the first word (everything before first whitespace)
+      let firstWord = "";
+      for (let i = 0; i < clean.length; i++) {
+        if (/\s/.test(clean[i])) {
+          // Found first whitespace, stop
+          break;
+        }
+        firstWord += clean[i];
+      }
+      if (!firstWord) return "";
+      // Capitalize: first letter uppercase, rest as-is
+      return firstWord[0].toUpperCase() + firstWord.slice(1);
     };
 
     // Highlight the currently spoken word in the editor by selecting it
@@ -382,12 +392,22 @@ const searchNotes = async () => {
   content,
   onUpdate: ({ editor }) => {
     setContent(editor.getHTML());
-    // Auto-generate title from content when empty (typing or voice)
+    // Auto-generate title from content when title is empty
+    // Only auto-generate once user has typed a complete first word (contains a space)
     setTitle((prev) => {
-      if (!prev || !prev.trim()) {
-        const candidate = deriveTitleFromText(editor.getText());
+      const editorText = editor.getText().trim();
+      
+      // Don't auto-generate if title already has a value (user manually set it)
+      if (prev && prev.trim()) {
+        return prev;
+      }
+      
+      // Only auto-generate if content contains a space (complete first word)
+      if (editorText.includes(" ")) {
+        const candidate = deriveTitleFromText(editorText);
         return candidate || prev || "";
       }
+      
       return prev;
     });
   }
@@ -571,10 +591,8 @@ useEffect(() => {
                 
                 {/* Header */}
                 <header className="flex items-center justify-between mb-12">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-[rgb(45,106,79)] p-2.5 rounded shadow-md">
-                            <span className="material-symbols-outlined text-white text-xl">mic</span>
-                        </div>
+                    <div className="flex items-center gap-1">
+                        <img src="/logo-light.png" alt="EchoNote Logo" className="w-10 h-10" />
                         <div>
                             <h2 className="text-lg font-bold tracking-tight text-[rgb(20,30,25)] font-serif italic">EchoNote</h2>
                             <p className="text-[10px] uppercase tracking-widest text-[rgb(45,106,79)] font-bold">Where Your Thoughts Echo Back</p>
