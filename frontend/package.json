@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.5",
     "@tiptap/extension-highlight": "^3.16.0",
     "@tiptap/extension-placeholder": "^3.14.0",
     "@tiptap/extension-text-align": "^3.14.0",
