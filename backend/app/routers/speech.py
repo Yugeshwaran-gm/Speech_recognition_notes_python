@@ -12,15 +12,19 @@ router = APIRouter(prefix="/speech", tags=["Speech"])
 
 TEMP = "temp_audio"
 os.makedirs(TEMP, exist_ok=True)
-
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 # ===========================
 # SPEECH → TEXT (multi-language)
 # ===========================
 @router.post("/stt")
 async def stt(file: UploadFile = File(...)):
+    contents = await file.read()
+
+    if len(contents) > MAX_FILE_SIZE:
+        return {"error": "Audio file too large. Maximum size is 5MB."}
     file_id = str(uuid.uuid4())
-    file_path = f"{TEMP}/{file_id}.wav"
+    file_path = f"{TEMP}/{file_id}_{file.filename}"
 
     # Save file
     with open(file_path, "wb") as f:
@@ -51,7 +55,7 @@ async def speech_command(
 ):
     # Save audio
     file_id = str(uuid.uuid4())
-    file_path = f"{TEMP}/{file_id}.wav"
+    file_path = f"{TEMP}/{file_id}_{file.filename}"
     with open(file_path, "wb") as f:
         f.write(await file.read())
 

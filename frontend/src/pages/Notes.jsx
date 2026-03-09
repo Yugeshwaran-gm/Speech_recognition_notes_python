@@ -11,7 +11,7 @@ import Highlight from "@tiptap/extension-highlight";
 import NotesHeader from "../components/NotesHeader";
 import VoiceCommandsHelp from "../components/VoiceCommandsHelp.jsx";
 import CalendarWidget from "../components/CalendarWidget";
-
+import AudioUploadModal from "../components/AudioUploadModal.jsx";
 
 export default function Notes() {
     const { logout } = useContext(AuthContext);
@@ -31,7 +31,7 @@ export default function Notes() {
     const [isCommandOpen, setIsCommandOpen] = useState(false);
     const COMMAND_COOLDOWN = 1200; 
     const [titleFocused, setTitleFocused] = useState(false);
-
+    const [showAudioModal, setShowAudioModal] = useState(false);
 
 
     useEffect(() => {
@@ -563,6 +563,59 @@ const readSelection = () => {
   window.speechSynthesis.speak(utterance);
 };
 
+const formatText = () => {
+  if (!editor) return;
+
+  const rawText = editor.getText() || "";
+  let cleaned = rawText.replace(/\s+/g, " ").trim();
+
+  if (!cleaned) {
+    editor.commands.setContent("");
+    return;
+  }
+
+  // Remove repeated words or phrases
+  let previous;
+  do {
+    previous = cleaned;
+    cleaned = cleaned.replace(/\b(\w+(?:\s+\w+)*)\s+\1\b/gi, "$1");
+  } while (cleaned !== previous);
+
+  // Convert "next point" style speech into bullet points
+  cleaned = cleaned.replace(/\b(next point|next)\s+/gi, "<br/>• ");
+
+  // Fix spacing before punctuation
+  cleaned = cleaned.replace(/\s+([,.;!?])/g, "$1");
+
+  // Fix spacing after punctuation
+  cleaned = cleaned.replace(/([,.;!?])([^\s])/g, "$1 $2");
+
+  // Normalize to lowercase
+  cleaned = cleaned.toLowerCase();
+
+  // Capitalize first letter of sentences
+  cleaned = cleaned.replace(/(^[a-z])|([.!?]\s+[a-z])/g, (match) => match.toUpperCase());
+
+  // Capitalize weekdays
+  cleaned = cleaned.replace(
+    /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/g,
+    (day) => day[0].toUpperCase() + day.slice(1)
+  );
+
+  // Add comma before conjunctions after weekdays
+  cleaned = cleaned.replace(
+    /\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+(and|but|or)\b/g,
+    "$1, $2"
+  );
+
+  // Simple sentence break heuristic
+  cleaned = cleaned.replace(
+    /\b(project|meeting|deadline)\s+(the|we|testing|it)\b/gi,
+    "$1. $2"
+  );
+
+  editor.commands.setContent(cleaned);
+};
 
 useEffect(() => {
     if (editor && content !== editor.getHTML()) {
@@ -786,7 +839,8 @@ useEffect(() => {
                             )}
 
                             {/* Action Buttons - Floating Bottom Bar */}
-                            <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-[rgb(47,62,70)] text-white px-10 py-4 rounded-full shadow-2xl flex items-center justify-center gap-10 ring-4 ring-[rgb(45,106,79)]/5 z-10">
+                            <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-[rgb(47,62,70)] text-white px-8 py-4 rounded-full shadow-2xl inline-flex w-fit max-w-[92%] items-center justify-center gap-8 ring-4 ring-[rgb(45,106,79)]/5 z-10">
+                            {/* <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-[rgb(47,62,70)] text-white px-8 py-4 rounded-full shadow-2xl inline-flex w-fit max-w-[92%] items-center justify-center gap-8 ring-4 ring-[rgb(45,106,79)]/5 z-10"> */}
                                 
                                 <button
                                     onClick={() => {
@@ -824,6 +878,18 @@ useEffect(() => {
                                     <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">delete_outline</span>
                                     <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Clear</span>
                                 </button>
+                                <button
+  onClick={() => setShowAudioModal(true)}
+  className="flex flex-col items-center gap-1 group"
+  title="Upload Audio"
+>
+  <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">
+    audio_file
+  </span>
+  <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">
+    Audio
+  </span>
+</button>
 
                                 {/* Center Mic Button - Larger & Green */}
                                 <button
@@ -836,6 +902,15 @@ useEffect(() => {
                                     title={listening ? "Stop Listening" : "Start Listening"}
                                 >
                                     <span className="material-symbols-outlined text-white text-3xl">mic</span>
+                                </button>
+
+                                <button
+                                    onClick={formatText}
+                                    className="flex flex-col items-center gap-1 group"
+                                    title="Format Text"
+                                >
+                                    <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">auto_fix_high</span>
+                                    <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Format</span>
                                 </button>
 
                                 <button
@@ -869,6 +944,7 @@ useEffect(() => {
                                     title="Export as PDF"
                                 >
                                     <span className="material-symbols-outlined text-white/80 group-hover:text-white transition-colors text-2xl">picture_as_pdf</span>
+                                    
                                     <span className="text-[8px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white/90">Export PDF</span>
                                 </button>
                             </div>
@@ -1031,6 +1107,13 @@ useEffect(() => {
                     </button>
                 </div>
             </aside>
+{/* AUDIO UPLOAD MODAL */}
+{showAudioModal && (
+  <AudioUploadModal
+    editor={editor}
+    onClose={() => setShowAudioModal(false)}
+  />
+)}
 
         </div>
     );
