@@ -21,18 +21,23 @@ MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 async def stt(file: UploadFile = File(...)):
     contents = await file.read()
 
+    if not contents:
+        return {"error": "No audio file uploaded"}
     if len(contents) > MAX_FILE_SIZE:
         return {"error": "Audio file too large. Maximum size is 5MB."}
+    
     file_id = str(uuid.uuid4())
     file_path = f"{TEMP}/{file_id}_{file.filename}"
 
     # Save file
     with open(file_path, "wb") as f:
-        f.write(await file.read())
+        f.write(contents)
 
     # Speech to Text
     original_text = convert_speech_to_text(file_path)
 
+    os.remove(file_path)
+    
     if not original_text:
         return {"error": "STT failed"}
 
